@@ -4,16 +4,106 @@ const role = require("../db/role");
 const employee = require("../db/employee");
 const mytable = require("console.table");
 
+const updateEmployee = async () => {
+  let currentRole;
+  let fullList = [];
+  await new role()
+    .runQuery("select first_name,last_name from employee")
+    .then(([result]) => {
+      result.forEach((obj) => {
+        const { first_name, last_name } = obj;
+        fullList.push(first_name);
+      });
+    })
+    .catch((e) => {
+      console.log("failed  db operataion", e);
+    });
+  console.log("DEBUG 2", fullList);
+  inquirer
+    .prompt([
+      // {
+      //   name: "firstName",
+      //   message: "Employee's First Name ? ",
+      // },
+      // {
+      //   name: "lastName",
+      //   message: "Employee's Last Name ? ",
+      // },
+      // {
+      //   name: "role",
+      //   type: "list",
+      //   message: "choose the Designation ",
+      //   choices: roleList,
+      // },
+      {
+        name: "employee",
+        type: "list",
+        message: "choose the Employee to update",
+        choices: fullList,
+      },
+    ])
+    .then(async (ans) => {
+      console.log("INQUIRER answers", ans.employee);
+      //Choose new role
+
+      let NewRoleList = [];
+
+      await new role()
+        .runQuery("select id, title from role")
+        .then(([result]) => {
+          result.forEach((obj) => {
+            const { id, title } = obj;
+            NewRoleList.push(title);
+          });
+        });
+
+      inquirer
+        .prompt([
+          {
+            name: "updateRole",
+            type: "list",
+            message: "choose Employees new Role",
+            choices: NewRoleList,
+          },
+        ])
+        .then(async (res) => {
+          console.log("NEW RPOLE ANS ", res.updateRole);
+          // get id for the role to add to db
+          let newRole;
+          await new role()
+            .runQuery(`SELECT id from role where title="${res.updateRole}" `)
+            .then(([result]) => {
+              const { id } = result[0];
+              newRole = id;
+            })
+            .catch((e) => {
+              console.log("failed to get data", e);
+            });
+          console.log(
+            `update  employee set new role to ${newRole}  where f_name ="${ans.employee}"  `
+          );
+          await new role()
+            .runQuery(
+              `UPDATE employee SET role_id= ${newRole} WHERE first_name="${ans.employee}"`
+            )
+            .then((res) => {
+              console.log("Sucessfully Updated the employee role ");
+              main();
+            })
+            .catch((e) => {
+              console.log("Failed DB action", e);
+            });
+        });
+    })
+    .catch((e) => {
+      console.log("inquirer Error ", e);
+    });
+};
+
 const addEmployee = async () => {
   let roleList = [];
   let managerList = [];
   await new role().runQuery("select id, title from role").then(([result]) => {
-    // for (const list in result[0]) {
-    //   const { name } = result[0][list];
-    //   deptList.push(name);
-    // }
-    console.log("ADATA ", result);
-
     result.forEach((obj) => {
       const { id, title } = obj;
       roleList.push(title);
@@ -21,19 +111,15 @@ const addEmployee = async () => {
   });
 
   await new role()
-    .runQuery("select first_name from employee where id=1  ")
+    .runQuery("select first_name from employee where role_id=1  ")
     .then(([result]) => {
-      // for (const list in result[0]) {
-      //   const { name } = result[0][list];
-      //   deptList.push(name);
-      // }
-      console.log("ADATA ", result);
-
       result.forEach((obj) => {
         const { first_name } = obj;
         managerList.push(first_name);
       });
     });
+
+  console.log("MANAGER LIST IS ", managerList);
 
   inquirer
     .prompt([
@@ -61,7 +147,7 @@ const addEmployee = async () => {
     .then(async (ans) => {
       let myrole;
       let managerid;
-      console.log("I HAVE MANAGER AS ", ans.manager);
+
       await new role()
         .runQuery(`SELECT id from role where title="${ans.role}" `)
         .then(([result]) => {
@@ -80,7 +166,6 @@ const addEmployee = async () => {
             `SELECT id from employee where first_name="${ans.manager}" `
           )
           .then(([result]) => {
-            console.log(result[0]);
             const { id } = result[0];
             managerid = id;
           })
@@ -89,14 +174,6 @@ const addEmployee = async () => {
           });
       }
 
-      console.log(
-        "Adding ",
-        ans.firstName,
-        ans.lastName,
-        ans.role,
-        myrole,
-        managerid
-      );
       await new employee(ans.firstName, ans.lastName, myrole, managerid)
         .addEmployee()
         .then(() => {
@@ -120,7 +197,7 @@ const addRole = async () => {
       deptList.push(name);
     }
   });
-  console.log("my array is ", deptList);
+
   inquirer
     .prompt([
       {
@@ -148,7 +225,6 @@ const addRole = async () => {
           console.log("error", err);
         });
 
-      console.log("found the id ", myid.id);
       new role(ans.rolename, ans.salary, myid.id)
         .addRole()
         .then((suc) => {
@@ -230,13 +306,16 @@ const main = () => {
           break;
         case "add a department":
           addDept();
-          //new dept().addDept(7, mydept);
+
           break;
         case "add a role":
           addRole();
           break;
         case "add an employee":
           addEmployee();
+          break;
+        case "update an employee role":
+          updateEmployee();
           break;
         default:
           console.log("you choose ", answers.initQ);
