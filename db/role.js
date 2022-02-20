@@ -8,6 +8,9 @@ module.exports = class Role {
   viewRole() {
     return db.execute("SELECT * from role ");
   }
+  runQuery(query) {
+    return db.execute(query);
+  }
   addRole() {
     return db.execute(
       "insert into role(title,salary,department_id) VALUES (?,?,?)",
