@@ -4,6 +4,114 @@ const role = require("../db/role");
 const employee = require("../db/employee");
 const mytable = require("console.table");
 
+const budget = async () => {
+  await new role()
+    .runQuery(
+      "select  department.name  department  , sum(role.salary)  Budged  from role    join department on role.department_id=department.id    group by role.department_id  ;"
+    )
+    .then(([result]) => {
+      console.clear();
+      console.log("\n\n\n");
+      console.table(result);
+
+      main();
+      // result.forEach((obj) => {
+      //   console.log("OBJECT IS ", obj);
+      //   // const { department, Budget } = obj;
+      //   // fullList.push(first_name);
+      // });
+    })
+    .catch((e) => {
+      console.log("failed  db operataion", e);
+    });
+};
+
+const updateManager = async () => {
+  let newManager;
+  let newManagerList = [];
+  let employee;
+  let newManagerid;
+  let fullList = [];
+  await new role()
+    .runQuery("select first_name, last_name from employee")
+    .then(([result]) => {
+      result.forEach((obj) => {
+        const { first_name, last_name } = obj;
+        fullList.push(first_name);
+      });
+    })
+    .catch((e) => {
+      console.log("failed  db operataion", e);
+    });
+
+  inquirer
+    .prompt([
+      {
+        name: "employee",
+        type: "list",
+        message: "choose the Employee to update",
+        choices: fullList,
+      },
+    ])
+    .then(async (ans) => {
+      console.log("INQUIRER answers", ans.employee);
+      employee = ans.employee;
+      //Choose new Manager
+
+      await new role()
+        .runQuery("select first_name from employee where role_id = 1")
+        .then(([result]) => {
+          console.log("DEBUG", result);
+          result.forEach((obj) => {
+            const { first_name } = obj;
+            newManagerList.push(first_name);
+          });
+        });
+
+      inquirer
+        .prompt([
+          {
+            name: "updateManager",
+            type: "list",
+            message: "choose New Manager",
+            choices: newManagerList,
+          },
+        ])
+        .then(async (res) => {
+          console.log("NEW RPOLE ANS ", res.updateManager);
+          // get id for the role to add to db
+          newManager = res.updateManager;
+          // get id of new manager
+          await new role()
+            .runQuery(
+              `SELECT id from employee where first_name="${newManager}" `
+            )
+            .then(([result]) => {
+              const { id } = result[0];
+              newManagerid = id;
+            })
+            .catch((e) => {
+              console.log("failed to get data", e);
+            });
+
+          await new role()
+            .runQuery(
+              `update  employee set  manager_id=${newManagerid}  where first_name ="${employee}"`
+            )
+            .then((res) => {
+              console.log("Sucessfully Updated the employee's Manager ");
+              main();
+            })
+            .catch((e) => {
+              console.log("Failed DB action", e);
+            });
+        });
+    })
+    .catch((e) => {
+      console.log("inquirer Error ", e);
+    });
+};
+
 const updateEmployee = async () => {
   let currentRole;
   let fullList = [];
@@ -18,23 +126,9 @@ const updateEmployee = async () => {
     .catch((e) => {
       console.log("failed  db operataion", e);
     });
-  console.log("DEBUG 2", fullList);
+
   inquirer
     .prompt([
-      // {
-      //   name: "firstName",
-      //   message: "Employee's First Name ? ",
-      // },
-      // {
-      //   name: "lastName",
-      //   message: "Employee's Last Name ? ",
-      // },
-      // {
-      //   name: "role",
-      //   type: "list",
-      //   message: "choose the Designation ",
-      //   choices: roleList,
-      // },
       {
         name: "employee",
         type: "list",
@@ -277,6 +371,8 @@ const main = () => {
           "add a role",
           "add an employee",
           "update an employee role",
+          "Update Employees manager",
+          "Department Budget",
         ],
       },
     ])
@@ -285,21 +381,28 @@ const main = () => {
       switch (answers.initQ) {
         case "view all departments":
           new dept().viewDept().then((result) => {
+            console.clear();
+            console.log("\n\n\n");
             console.table(result[0]);
-
+            console.log("\n\n\n");
             main();
           });
           break;
         case "view all roles":
           new role().viewRole().then((result) => {
+            console.clear();
+            console.log("\n\n\n");
             console.table(result[0]);
-
+            console.log("\n\n\n");
             main();
           });
           break;
         case "view all employees":
           new employee().viewEmployee().then((result) => {
+            console.clear();
+            console.log("\n\n\n");
             console.table(result[0]);
+            console.log("\n\n\n");
 
             main();
           });
@@ -317,6 +420,13 @@ const main = () => {
         case "update an employee role":
           updateEmployee();
           break;
+
+        case "Update Employees manager":
+          updateManager();
+          break;
+
+        case "Department Budget":
+          budget();
         default:
           console.log("you choose ", answers.initQ);
       }
