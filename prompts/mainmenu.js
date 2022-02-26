@@ -54,14 +54,12 @@ const updateManager = async () => {
       },
     ])
     .then(async (ans) => {
-      console.log("INQUIRER answers", ans.employee);
       employee = ans.employee;
       //Choose new Manager
 
       await new role()
         .runQuery("select first_name from employee where role_id = 1")
         .then(([result]) => {
-          console.log("DEBUG", result);
           result.forEach((obj) => {
             const { first_name } = obj;
             newManagerList.push(first_name);
@@ -78,7 +76,6 @@ const updateManager = async () => {
           },
         ])
         .then(async (res) => {
-          console.log("NEW RPOLE ANS ", res.updateManager);
           // get id for the role to add to db
           newManager = res.updateManager;
           // get id of new manager
@@ -137,7 +134,6 @@ const updateEmployee = async () => {
       },
     ])
     .then(async (ans) => {
-      console.log("INQUIRER answers", ans.employee);
       //Choose new role
 
       let NewRoleList = [];
@@ -161,7 +157,6 @@ const updateEmployee = async () => {
           },
         ])
         .then(async (res) => {
-          console.log("NEW RPOLE ANS ", res.updateRole);
           // get id for the role to add to db
           let newRole;
           await new role()
@@ -173,9 +168,7 @@ const updateEmployee = async () => {
             .catch((e) => {
               console.log("failed to get data", e);
             });
-          console.log(
-            `update  employee set new role to ${newRole}  where f_name ="${ans.employee}"  `
-          );
+
           await new role()
             .runQuery(
               `UPDATE employee SET role_id= ${newRole} WHERE first_name="${ans.employee}"`
@@ -212,8 +205,6 @@ const addEmployee = async () => {
         managerList.push(first_name);
       });
     });
-
-  console.log("MANAGER LIST IS ", managerList);
 
   inquirer
     .prompt([
