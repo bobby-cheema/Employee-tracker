@@ -17,7 +17,12 @@ npm install
 
 ## Usge Information 
 
-first you need to create a mysql db for this , there are files in db directory to create the structure for you 
+first you need to create a mysql db for this , there are files in db directory to create the structure for you run npm start to run the app, it s menu driven.
+
+<img width="612" alt="Screen Shot 2022-02-27 at 11 09 21 am" src="https://user-images.githubusercontent.com/82983031/155863060-a4ba70da-0168-4143-9e2c-8f1408f02f12.png">
+<img width="567" alt="Screen Shot 2022-02-27 at 11 11 31 am" src="https://user-images.githubusercontent.com/82983031/155863076-98ffa027-290b-4d9e-a243-efc06f488411.png">
+<img width="741" alt="Screen Shot 2022-02-27 at 11 12 08 am" src="https://user-images.githubusercontent.com/82983031/155863084-943d38eb-592a-46a5-8576-5a2c24a3fe6f.png">
+
 
 ## Licience 
 
